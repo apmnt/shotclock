@@ -1,4 +1,9 @@
 from pathlib import Path
+import dotenv
+
+dotenv.load_dotenv()
+
+SECRET_KEY = dotenv.get_key(dotenv.find_dotenv(), "SECRET_KEY")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
