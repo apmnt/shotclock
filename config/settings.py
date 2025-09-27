@@ -61,6 +61,10 @@ CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 STATIC_URL = "static/"
 STATIC_ROOT = "/var/www/shotclock/static"
 
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = "/var/www/shotclock/media"
+
 # Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
