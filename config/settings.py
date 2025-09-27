@@ -2,7 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["161.33.14.26", "127.0.0.1", "localhost"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -59,6 +59,7 @@ CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 
 # Static files
 STATIC_URL = "static/"
+STATIC_ROOT = "/var/www/shotclock/static"
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
