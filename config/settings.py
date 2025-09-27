@@ -1,11 +1,22 @@
+import os
 from pathlib import Path
-import dotenv
-
-dotenv.load_dotenv()
-
-SECRET_KEY = dotenv.get_key(dotenv.find_dotenv(), "SECRET_KEY")
+from dotenv import load_dotenv, find_dotenv, get_key
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env if present
+load_dotenv(find_dotenv(filename=".env", usecwd=True))
+
+# Prefer system environment (from systemd), then .env as fallback
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    env_path = find_dotenv(filename=".env", usecwd=True)
+    if env_path:
+        SECRET_KEY = get_key(env_path, "SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY is not set (env or .env).")
 
 ALLOWED_HOSTS = ["161.33.14.26", "127.0.0.1", "localhost"]
 
