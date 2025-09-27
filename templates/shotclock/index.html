@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shot Clock</title>
+  </head>
+  <body>
+    <h1>Shot Clock System</h1>
+    <p>Welcome to the Shot Clock system. Choose a game ID to get started:</p>
+
+    <div class="game-section">
+      <h2>Quick Start</h2>
+      <p>Use "game1" as a default game ID to get started quickly:</p>
+      <div class="links">
+        <a href="{% url 'control' game_id='game1' %}" class="control-link"
+          >Control Panel</a
+        >
+        <a href="{% url 'display' game_id='game1' %}" class="display-link"
+          >Display</a
+        >
+      </div>
+    </div>
+
+    <div class="game-section">
+      <h2>Custom Game</h2>
+      <p>
+        Enter your game identifier and use the links to access control or
+        display:
+      </p>
+      <div class="game-input-section">
+        <input
+          type="text"
+          id="gameIdInput"
+          placeholder="Enter game ID (e.g., game2, basketball)"
+          value=""
+        />
+        <div class="links" style="display: inline-block">
+          <a href="#" id="controlLink" class="control-link">Control Panel</a>
+          <a href="#" id="displayLink" class="display-link">Display</a>
+        </div>
+      </div>
+      <p>
+        <small
+          >Enter a game identifier above and click the links to access the
+          control panel or display for that game.</small
+        >
+      </p>
+    </div>
+
+    <div class="game-section">
+      <h2>API Endpoints</h2>
+      <p>
+        For developers - API endpoints for game state (replace "game1" with your
+        game ID):
+      </p>
+      <ul>
+        <li><a href="{% url 'state_json' game_id='game1' %}">JSON State</a></li>
+        <li>
+          <a href="{% url 'state_plain' game_id='game1' %}">Plain Text State</a>
+        </li>
+        <li>
+          <a href="{% url 'state_sse' game_id='game1' %}"
+            >Server-Sent Events Stream</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      function updateLinks() {
+        const gameId =
+          document.getElementById("gameIdInput").value.trim() || "your-game-id";
+        const controlLink = document.getElementById("controlLink");
+        const displayLink = document.getElementById("displayLink");
+
+        // Update the href attributes with the current game ID
+        controlLink.href = `{% url 'control' game_id='PLACEHOLDER' %}`.replace(
+          "PLACEHOLDER",
+          gameId
+        );
+        displayLink.href = `{% url 'display' game_id='PLACEHOLDER' %}`.replace(
+          "PLACEHOLDER",
+          gameId
+        );
+      }
+
+      // Update links when the input changes
+      document
+        .getElementById("gameIdInput")
+        .addEventListener("input", updateLinks);
+
+      // Initialize links on page load
+      updateLinks();
+    </script>
+  </body>
+</html>

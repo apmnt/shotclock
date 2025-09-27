@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<div id="t">24.0</div>
+<script>
+  const game_id = "{{ game_id }}";
+  const tEl = document.getElementById("t");
+  let running = false,
+    serverRemaining = 24000,
+    lastSync = performance.now();
+
+  function fmt(ms) {
+    const m = Math.floor(ms / 60000),
+      s = Math.floor((ms % 60000) / 1000),
+      d = Math.floor((ms % 1000) / 100);
+    return `${m ? String(m).padStart(2, "0") + ":" : ""}${String(s).padStart(
+      2,
+      "0"
+    )}.${d}`;
+  }
+  function frame() {
+    let ms = serverRemaining;
+    if (running) {
+      const elapsed = performance.now() - lastSync;
+      ms = Math.max(0, serverRemaining - elapsed);
+    }
+    tEl.textContent = fmt(ms);
+    tEl.className = ms <= 5000 ? "warn" : "";
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  function connect() {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(
+      `${proto}://${location.host}/ws/clock/${game_id}/`
+    );
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "tick") {
+        serverRemaining = msg.remaining_ms;
+        running = msg.running;
+        lastSync = performance.now();
+      }
+    };
+    ws.onclose = () => setTimeout(connect, 1000);
+  }
+  connect();
+</script>

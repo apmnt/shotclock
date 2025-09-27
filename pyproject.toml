@@ -1,0 +1,19 @@
+[project]
+name = "shotclock"
+version = "0.1.0"
+description = "Basketball shot clock web app"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Aapo Montin", email = "aapomo@gmail.com"}]
+dependencies = [
+    "uvicorn[standard]>=0.37.0",
+    "websockets>=15.0.1",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2.5",
+]

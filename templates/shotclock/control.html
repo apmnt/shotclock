@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<h1>Shot Clock Control – {{ game_id }}</h1>
+<div class="row">
+  <label
+    >Set (s): <input id="secs" type="number" value="24" min="1" max="99"
+  /></label>
+</div>
+<div class="row">
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <button id="reset">Reset</button>
+  <button id="apply">Apply</button>
+  <button data-s="14">Set 14</button>
+  <button data-s="24">Set 24</button>
+</div>
+<script>
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(
+    `${proto}://${location.host}/ws/clock/{{ game_id }}/`
+  );
+  document.getElementById("start").onclick = () =>
+    ws.send(JSON.stringify({ cmd: "start" }));
+  document.getElementById("stop").onclick = () =>
+    ws.send(JSON.stringify({ cmd: "stop" }));
+  document.getElementById("reset").onclick = () =>
+    ws.send(JSON.stringify({ cmd: "reset" }));
+  document.getElementById("apply").onclick = () => {
+    const ms = Math.max(1, +document.getElementById("secs").value) * 1000;
+    ws.send(JSON.stringify({ cmd: "set", value: ms }));
+  };
+  document.querySelectorAll("button[data-s]").forEach((b) => {
+    b.onclick = () =>
+      ws.send(JSON.stringify({ cmd: "set", value: +b.dataset.s * 1000 }));
+  });
+</script>
