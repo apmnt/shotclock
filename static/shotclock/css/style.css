@@ -360,3 +360,146 @@ input[type="number"]:focus {
 #time.warn {
   color: #dc3545;
 }
+
+@media (max-width: 768px) {
+  .grid-container {
+    display: block;
+    gap: 0;
+  }
+
+  .header {
+    min-height: auto;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+
+  .main-content {
+    min-height: auto;
+    padding: 20px;
+  }
+
+  .slogan {
+    font-size: 20vw;
+    letter-spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+
+  .title h2 {
+    font-size: 1.5rem;
+  }
+
+  .title p {
+    font-size: 1rem;
+  }
+
+  .control-container {
+    padding: 10px;
+  }
+
+  .control-header {
+    position: relative;
+    top: auto;
+    left: auto;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .control-header h1:first-child {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  .control-header h1:last-child {
+    font-size: 1.2rem;
+    margin-top: 0;
+  }
+
+  .control-content {
+    padding-top: 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  .clock-display {
+    margin-bottom: 32px;
+  }
+
+  #clockTime {
+    font-size: 8rem;
+  }
+
+  .row:nth-of-type(3),
+  .row:nth-of-type(4) {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  #gameIdInput {
+    width: 100%;
+    max-width: 320px;
+    margin: 8px 0;
+  }
+
+  .links {
+    display: block !important;
+    width: 100%;
+  }
+
+  .control-link,
+  .display-link {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 8px auto;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .game-input-section {
+    text-align: center;
+  }
+
+  body {
+    font-size: 1rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  button {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  input[type="number"] {
+    padding: 14px 16px;
+    font-size: 16px;
+    min-height: 48px;
+    width: 100px;
+  }
+
+  @media (max-width: 480px) {
+    .row:nth-of-type(3),
+    .row:nth-of-type(4) {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    #clockTime {
+      font-size: 6rem;
+    }
+
+    .slogan {
+      font-size: 6rem;
+      letter-spacing: -2px;
+    }
+
+    .control-header h1:first-child {
+      font-size: 1.8rem;
+    }
+  }
+}
