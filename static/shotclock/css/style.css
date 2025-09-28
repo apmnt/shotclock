@@ -106,6 +106,14 @@ th {
   white-space: nowrap;
 }
 
+.slogan {
+  margin-bottom: 0;
+}
+
+.title h2 {
+  margin-top: 0;
+}
+
 .grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -121,15 +129,17 @@ th {
   margin-bottom: 0px;
   box-sizing: border-box;
   min-height: calc(100vh - 40px);
+  max-width: 800px;
 }
 
 .header {
   position: fixed;
   bottom: 0;
   left: 20px;
-  right: 0;
+  max-width: 300px;
   border-bottom: 1px solid #eee;
   z-index: 1000;
+  text-align: left;
 }
 
 .title h2 {
@@ -373,17 +383,28 @@ input[type="number"]:focus {
   color: #dc3545;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 850px) {
   .grid-container {
     display: block;
     gap: 0;
   }
 
-  .header {
+  .sidebar {
     min-height: auto;
     padding: 20px;
     text-align: center;
     border-bottom: 1px solid #eee;
+  }
+
+  .header {
+    position: static;
+    border-bottom: none;
+    padding: 0;
+    width: auto;
+  }
+
+  .header h2 {
+    margin-bottom: 0;
   }
 
   .main-content {
@@ -394,7 +415,7 @@ input[type="number"]:focus {
   .slogan {
     font-size: min(20vw, 10vh);
     letter-spacing: -3px;
-    margin: 0 0 20px 0;
+    margin: 0;
   }
 
   .title h2 {
@@ -452,6 +473,8 @@ input[type="number"]:focus {
     width: 100%;
     max-width: 320px;
     margin: 8px 0;
+    display: flex;
+    align-items: flex-start;
   }
 
   .control-link,
@@ -468,6 +491,7 @@ input[type="number"]:focus {
     flex-direction: column;
     gap: 12px;
     width: 100%;
+    padding-bottom: 12px;
   }
 
   .game-input-section {
