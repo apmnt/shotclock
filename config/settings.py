@@ -20,6 +20,8 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = ["shotclock.aapomontin.com", "161.33.14.26", "127.0.0.1", "localhost"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["https://shotclock.aapomontin.com"]
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
