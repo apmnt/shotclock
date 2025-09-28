@@ -93,7 +93,7 @@ th {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 50vw;
+  font-size: min(50vw, 40vh);
   text-align: center;
   margin: 0;
   font-family: "GeistMono", monospace;
@@ -101,8 +101,9 @@ th {
 }
 
 .slogan {
-  font-size: 108px;
+  font-size: min(20vw, 10vh);
   letter-spacing: -5px;
+  white-space: nowrap;
 }
 
 .grid-container {
@@ -117,12 +118,9 @@ th {
   flex-direction: column;
   justify-content: center;
   padding: 20px;
+  margin-bottom: 0px;
   box-sizing: border-box;
   min-height: calc(100vh - 40px);
-}
-
-.header {
-  margin-bottom: 20px;
 }
 
 .title h2 {
@@ -141,7 +139,6 @@ a {
 .display-link {
   display: inline-block;
   padding: 12px 24px;
-  margin: 8px;
   text-decoration: none;
   color: #333;
   background-color: #fff;
@@ -386,7 +383,7 @@ input[type="number"]:focus {
   }
 
   .slogan {
-    font-size: 20vw;
+    font-size: min(20vw, 10vh);
     letter-spacing: -3px;
     margin: 0 0 20px 0;
   }
@@ -448,19 +445,20 @@ input[type="number"]:focus {
     margin: 8px 0;
   }
 
-  .links {
-    display: block !important;
-    width: 100%;
-  }
-
   .control-link,
   .display-link {
     display: block;
     width: 100%;
     max-width: 320px;
-    margin: 8px auto;
     text-align: center;
     box-sizing: border-box;
+  }
+
+  .links {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
   }
 
   .game-input-section {
@@ -500,12 +498,24 @@ input[type="number"]:focus {
     }
 
     .slogan {
-      font-size: 6rem;
+      font-size: min(20vw, 10vh);
       letter-spacing: -2px;
     }
 
     .control-header h1:first-child {
       font-size: 1.8rem;
+    }
+
+    #gameIdInput {
+      max-width: 100%;
+    }
+
+    .links {
+      display: flex !important;
+      flex-direction: row;
+      gap: 12px;
+      width: 100%;
+      padding-bottom: 12px;
     }
   }
 }
