@@ -79,6 +79,9 @@ CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 # Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = "/var/www/shotclock/static"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # Media files
 MEDIA_URL = "/media/"

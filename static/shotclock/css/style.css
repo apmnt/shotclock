@@ -1,0 +1,163 @@
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist/Geist-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+body {
+  font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+h2 {
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+#t {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 50vw;
+  text-align: center;
+  color: #333;
+  margin: 0;
+}
+
+.slogan {
+  font-size: 108px;
+  letter-spacing: -5px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.main-content,
+.header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 40px);
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title h2 {
+  margin-bottom: 0;
+}
+
+.title p {
+  margin-top: 5px;
+}
+
+a {
+  color: #333;
+}
+
+.control-link,
+.display-link {
+  display: inline-block;
+  padding: 12px 24px;
+  margin: 8px;
+  text-decoration: none;
+  color: #333;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.control-link:hover,
+.display-link:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+  transform: translateY(-1px);
+}
+
+.control-link:active,
+.display-link:active {
+  transform: translateY(0);
+  background-color: #eee;
+}
+
+#gameIdInput {
+  display: inline-block;
+  padding: 12px 16px;
+  margin: 8px 8px 8px 0;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  font-size: 16px;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  width: 300px;
+  box-sizing: border-box;
+}
+
+#gameIdInput:focus {
+  outline: none;
+  border-color: #999;
+  background-color: #f9f9f9;
+  transform: translateY(-1px);
+}
+
+#gameIdInput::placeholder {
+  color: #888;
+}

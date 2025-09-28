@@ -4,67 +4,90 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shot Clock</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'shotclock/css/style.css' %}" />
   </head>
   <body>
-    <h1>Shot Clock System</h1>
-    <p>Welcome to the Shot Clock system. Choose a game ID to get started:</p>
+    <div class="grid-container">
+      <div class="header">
+        <h1 class="slogan">Let's play.</h1>
 
-    <div class="game-section">
-      <h2>Quick Start</h2>
-      <p>Use "game1" as a default game ID to get started quickly:</p>
-      <div class="links">
-        <a href="{% url 'control' game_id='game1' %}" class="control-link"
-          >Control Panel</a
-        >
-        <a href="{% url 'display' game_id='game1' %}" class="display-link"
-          >Display</a
-        >
-      </div>
-    </div>
-
-    <div class="game-section">
-      <h2>Custom Game</h2>
-      <p>
-        Enter your game identifier and use the links to access control or
-        display:
-      </p>
-      <div class="game-input-section">
-        <input
-          type="text"
-          id="gameIdInput"
-          placeholder="Enter game ID (e.g., game2, basketball)"
-          value=""
-        />
-        <div class="links" style="display: inline-block">
-          <a href="#" id="controlLink" class="control-link">Control Panel</a>
-          <a href="#" id="displayLink" class="display-link">Display</a>
+        <div class="title">
+          <h2>A basketball shot clock</h2>
+          <p>
+            by
+            <a href="https://www.aapomontin.com">Aapo Montin</a>
+          </p>
         </div>
       </div>
-      <p>
-        <small
-          >Enter a game identifier above and click the links to access the
-          control panel or display for that game.</small
-        >
-      </p>
-    </div>
+      <div class="main-content">
+        <h2>About</h2>
 
-    <div class="game-section">
-      <h2>API Endpoints</h2>
-      <p>
-        For developers - API endpoints for game state (replace "game1" with your
-        game ID):
-      </p>
-      <ul>
-        <li><a href="{% url 'state_json' game_id='game1' %}">JSON State</a></li>
-        <li>
-          <a href="{% url 'state_plain' game_id='game1' %}">Plain Text State</a>
-        </li>
-        <li>
-          <a href="{% url 'state_sse' game_id='game1' %}"
-            >Server-Sent Events Stream</a
-          >
-        </li>
-      </ul>
+        <p>
+          This is a simple shot clock application built with Django, Channels,
+          and WebSockets. The project is hosted on an Oracle Cloud VM and the
+          source code is available on
+          <a href="https://github.com/apmnt/shotclock">GitHub</a>.
+        </p>
+        <p>
+          The application allows you to create multiple games, each identified
+          by a unique game ID. You can control the shot clock for each game via
+          a control panel and display the countdown on a separate screen.
+          Separation of controls and the view allows you to manage game state
+          from one client, while showing the countdown on other clients.
+        </p>
+        <p>
+          While having the ability to control the game from multiple clients,
+          some latency is expected due to the nature of WebSockets and network
+          conditions, especially as the app is hosted on Oracle Cloud in the
+          Asia Pacific region.
+        </p>
+
+        <div class="game-section">
+          <h2>Create a clock</h2>
+          <p>
+            Enter your clock identifier and use the links to access control or
+            display:
+          </p>
+          <div class="game-input-section">
+            <input
+              type="text"
+              id="gameIdInput"
+              placeholder="Enter game ID (e.g., game2, torikoris)"
+              value=""
+            />
+            <div class="links" style="display: inline-block">
+              <a href="#" id="controlLink" class="control-link"
+                >Control Panel</a
+              >
+              <a href="#" id="displayLink" class="display-link">Display</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-section">
+          <h2>API Endpoints</h2>
+          <p>
+            For developers - API endpoints for game state (replace "game1" with
+            your game ID):
+          </p>
+          <ul>
+            <li>
+              <a href="{% url 'state_json' game_id='game1' %}">JSON State</a>
+            </li>
+            <li>
+              <a href="{% url 'state_plain' game_id='game1' %}"
+                >Plain Text State</a
+              >
+            </li>
+            <li>
+              <a href="{% url 'state_sse' game_id='game1' %}"
+                >Server-Sent Events Stream</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <script>
