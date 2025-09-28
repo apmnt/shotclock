@@ -24,9 +24,9 @@
         <h2>About</h2>
 
         <p>
-          This is a simple shot clock application built with Django, Channels,
-          and WebSockets. The project is hosted on an Oracle Cloud VM and the
-          source code is available on
+          This is a shot clock application built with Django, Channels, and
+          WebSockets. The project is hosted on an Oracle Cloud VM and the source
+          code is available on
           <a href="https://github.com/apmnt/shotclock">GitHub</a>.
         </p>
         <p>
@@ -37,10 +37,11 @@
           from one client, while showing the countdown on other clients.
         </p>
         <p>
-          While having the ability to control the game from multiple clients,
-          some latency is expected due to the nature of WebSockets and network
-          conditions, especially as the app is hosted on Oracle Cloud in the
-          Asia Pacific region.
+          While the viewing and controlling the clocks from multiple clients
+          does work well, some latency is expected due to the nature of
+          WebSockets and network conditions, especially as the app is hosted in
+          the Asia Pacific region. To eliminate this latency, consider running
+          it on a development server.
         </p>
 
         <div class="game-section">
@@ -275,12 +276,22 @@
       }
 
       function formatTime(ms) {
-        const mins = Math.floor(ms / 60000);
-        const secs = Math.floor((ms % 60000) / 1000);
+        const totalSeconds = Math.floor(ms / 1000);
         const tenths = Math.floor((ms % 1000) / 100);
-        return `${mins ? String(mins).padStart(2, "0") + ":" : ""}${String(
-          secs
-        ).padStart(2, "0")}.${tenths}`;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+          return `${hours}.${minutes}.${String(seconds).padStart(
+            2,
+            "0"
+          )}.${tenths}`;
+        } else if (minutes > 0) {
+          return `${minutes}.${String(seconds).padStart(2, "0")}.${tenths}`;
+        } else {
+          return `${String(seconds).padStart(2, "0")}.${tenths}`;
+        }
       }
 
       function updateRealtimeClocks() {
@@ -459,8 +470,7 @@
       window.connect = manualReconnect;
       window.manualDisconnect = manualDisconnect;
 
-      function updateDebugInfo() {
-      }
+      function updateDebugInfo() {}
 
       // Update links when the input changes
       document

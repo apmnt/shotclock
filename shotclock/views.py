@@ -11,9 +11,18 @@ def index(request):
     active_clocks = []
     for game_id, state in SESSIONS.items():
         ms = state.remaining_ms()
-        mins, secs = divmod(ms // 1000, 60)
+        total_seconds = ms // 1000
         tenths = (ms % 1000) // 100
-        time_display = f"{mins:02d}:{secs:02d}.{tenths}"
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+
+        if hours > 0:
+            time_display = f"{hours}.{minutes}.{seconds:02d}.{tenths}"
+        elif minutes > 0:
+            time_display = f"{minutes}.{seconds:02d}.{tenths}"
+        else:
+            time_display = f"{seconds:02d}.{tenths}"
 
         active_clocks.append(
             {
