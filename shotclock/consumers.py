@@ -5,6 +5,7 @@ from shotclock.clock import SESSIONS, State
 
 # Single-process ticker registry to avoid multiple loops per game_id
 TICKERS: Dict[str, bool] = {}
+INDEX_TICKER_ACTIVE = False
 
 
 async def start_ticker(channel_layer, group_name, game_id, hz=10):
@@ -20,6 +21,95 @@ async def start_ticker(channel_layer, group_name, game_id, hz=10):
             group_name, {"type": "tick.message", "payload": payload}
         )
         await asyncio.sleep(interval)
+
+
+async def start_index_ticker(channel_layer, hz=2):
+    """Ticker for broadcasting all active clocks to index page clients"""
+    global INDEX_TICKER_ACTIVE
+    interval = 1 / hz
+    while INDEX_TICKER_ACTIVE:
+        # Collect all active clocks data
+        active_clocks = []
+        for game_id, state in SESSIONS.items():
+            ms = state.remaining_ms()
+            mins, secs = divmod(ms // 1000, 60)
+            tenths = (ms % 1000) // 100
+            time_display = f"{mins:02d}:{secs:02d}.{tenths}"
+
+            active_clocks.append(
+                {
+                    "game_id": game_id,
+                    "time_display": time_display,
+                    "remaining_ms": ms,
+                    "running": state.running,
+                    "status": "Running" if state.running else "Stopped",
+                }
+            )
+
+        # Sort by game_id for consistent display
+        active_clocks.sort(key=lambda x: x["game_id"])
+
+        payload = {
+            "type": "clocks_update",
+            "active_clocks": active_clocks,
+            "count": len(active_clocks),
+        }
+
+        await channel_layer.group_send(
+            "index_clients", {"type": "clocks.update", "payload": payload}
+        )
+        await asyncio.sleep(interval)
+
+
+class IndexConsumer(AsyncJsonWebsocketConsumer):
+    """WebSocket consumer for the index page to receive live clock updates"""
+
+    async def connect(self):
+        global INDEX_TICKER_ACTIVE
+        await self.channel_layer.group_add("index_clients", self.channel_name)
+        await self.accept()
+
+        # Send immediate snapshot
+        active_clocks = []
+        for game_id, state in SESSIONS.items():
+            ms = state.remaining_ms()
+            mins, secs = divmod(ms // 1000, 60)
+            tenths = (ms % 1000) // 100
+            time_display = f"{mins:02d}:{secs:02d}.{tenths}"
+
+            active_clocks.append(
+                {
+                    "game_id": game_id,
+                    "time_display": time_display,
+                    "remaining_ms": ms,
+                    "running": state.running,
+                    "status": "Running" if state.running else "Stopped",
+                }
+            )
+
+        active_clocks.sort(key=lambda x: x["game_id"])
+
+        await self.send_json(
+            {
+                "type": "clocks_update",
+                "active_clocks": active_clocks,
+                "count": len(active_clocks),
+            }
+        )
+
+        # Start index ticker if not already running
+        if not INDEX_TICKER_ACTIVE:
+            INDEX_TICKER_ACTIVE = True
+            asyncio.create_task(start_index_ticker(self.channel_layer, hz=10))
+
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard("index_clients", self.channel_name)
+        # Note: For simplicity, we keep the ticker running even if no clients
+        # Could be made to stop when last client disconnects
+
+    async def clocks_update(self, event):
+        """Handle clocks update messages from the ticker"""
+        await self.send_json(event["payload"])
 
 
 class ClockConsumer(AsyncJsonWebsocketConsumer):

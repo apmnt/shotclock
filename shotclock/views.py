@@ -7,7 +7,28 @@ from shotclock.clock import SESSIONS, State
 
 def index(request):
     """Main index page showing available options"""
-    return render(request, "shotclock/index.html")
+    # Get all active clock sessions
+    active_clocks = []
+    for game_id, state in SESSIONS.items():
+        ms = state.remaining_ms()
+        mins, secs = divmod(ms // 1000, 60)
+        tenths = (ms % 1000) // 100
+        time_display = f"{mins:02d}:{secs:02d}.{tenths}"
+
+        active_clocks.append(
+            {
+                "game_id": game_id,
+                "time_display": time_display,
+                "remaining_ms": ms,
+                "running": state.running,
+                "status": "Running" if state.running else "Stopped",
+            }
+        )
+
+    # Sort by game_id for consistent display
+    active_clocks.sort(key=lambda x: x["game_id"])
+
+    return render(request, "shotclock/index.html", {"active_clocks": active_clocks})
 
 
 def control(request, game_id):
@@ -45,3 +66,15 @@ def stream_sse(request, game_id):
     resp = StreamingHttpResponse(gen(), content_type="text/event-stream")
     resp["Cache-Control"] = "no-cache"
     return resp
+
+
+def all_clocks_json(request):
+    """API endpoint to get all active clocks and their states"""
+    clocks = {}
+    for game_id, state in SESSIONS.items():
+        clocks[game_id] = {
+            "remaining_ms": state.remaining_ms(),
+            "running": state.running,
+            "length_ms": state.length_ms,
+        }
+    return JsonResponse({"clocks": clocks, "count": len(clocks)})

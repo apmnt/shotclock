@@ -61,32 +61,102 @@
     }
     updateClock();
 
-    const ws = new WebSocket(
-      `${proto}://${location.host}/ws/clock/{{ game_id }}/`
-    );
+    let ws = null;
+    let wsConnected = false;
+    window.clientName = "Control Panel";
 
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === "tick") {
-        serverRemaining = msg.remaining_ms;
-        running = msg.running;
-        lastSync = performance.now();
+    function connectWebSocket() {
+      ws = new WebSocket(`${proto}://${location.host}/ws/clock/{{ game_id }}/`);
+      window.ws = ws;
+
+      ws.onopen = () => {
+        wsConnected = true;
+        window.wsConnected = true;
+        window.updateDebugInfo && window.updateDebugInfo();
+        updateConnectionStatus();
+        enableControls();
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "tick") {
+          serverRemaining = msg.remaining_ms;
+          running = msg.running;
+          window.running = running;
+          lastSync = performance.now();
+        }
+      };
+
+      ws.onclose = () => {
+        wsConnected = false;
+        window.wsConnected = false;
+        window.updateDebugInfo && window.updateDebugInfo();
+        updateConnectionStatus();
+        disableControls();
+        // Auto-reconnect after 2 seconds
+        setTimeout(connectWebSocket, 2000);
+      };
+
+      ws.onerror = () => {
+        wsConnected = false;
+        window.wsConnected = false;
+        window.updateDebugInfo && window.updateDebugInfo();
+        updateConnectionStatus();
+        disableControls();
+      };
+    }
+    window.connect = connectWebSocket;
+
+    function enableControls() {
+      const buttons = document.querySelectorAll("button");
+      const inputs = document.querySelectorAll("input");
+      buttons.forEach((btn) => {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      });
+      inputs.forEach((input) => {
+        input.disabled = false;
+        input.style.opacity = "1";
+      });
+    }
+
+    function disableControls() {
+      const buttons = document.querySelectorAll("button:not(#reconnectBtn)");
+      const inputs = document.querySelectorAll("input");
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+      });
+      inputs.forEach((input) => {
+        input.disabled = true;
+        input.style.opacity = "0.5";
+      });
+    }
+
+    function updateConnectionStatus() {}
+
+    function sendCommand(cmd, value) {
+      if (wsConnected && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(value ? { cmd, value } : { cmd }));
       }
-    };
+    }
 
-    document.getElementById("start").onclick = () =>
-      ws.send(JSON.stringify({ cmd: "start" }));
-    document.getElementById("stop").onclick = () =>
-      ws.send(JSON.stringify({ cmd: "stop" }));
-    document.getElementById("reset").onclick = () =>
-      ws.send(JSON.stringify({ cmd: "reset" }));
+    document.getElementById("start").onclick = () => sendCommand("start");
+    document.getElementById("stop").onclick = () => sendCommand("stop");
+    document.getElementById("reset").onclick = () => sendCommand("reset");
     document.getElementById("apply").onclick = () => {
       const ms = Math.max(1, +document.getElementById("secs").value) * 1000;
-      ws.send(JSON.stringify({ cmd: "set", value: ms }));
+      sendCommand("set", ms);
     };
     document.querySelectorAll("button[data-s]").forEach((b) => {
-      b.onclick = () =>
-        ws.send(JSON.stringify({ cmd: "set", value: +b.dataset.s * 1000 }));
+      b.onclick = () => sendCommand("set", +b.dataset.s * 1000);
     });
+
+    // Initialize connection
+    connectWebSocket();
+    disableControls(); // Start with controls disabled
   </script>
+  <script src="{% static 'shotclock/js/debug.js' %}"></script>
 </body>

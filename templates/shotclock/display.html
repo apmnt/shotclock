@@ -34,20 +34,83 @@
   }
   frame();
 
+  let wsStatus = "Connecting...";
+  let ws = null;
+  let wsConnected = false;
+  window.clientName = "Display";
+
   function connect() {
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    const ws = new WebSocket(
-      `${proto}://${location.host}/ws/clock/${game_id}/`
-    );
+    ws = new WebSocket(`${proto}://${location.host}/ws/clock/${game_id}/`);
+    window.ws = ws;
+    ws.onopen = () => {
+      wsStatus = "Connected";
+      wsConnected = true;
+      window.wsConnected = true;
+      window.updateDebugInfo && window.updateDebugInfo();
+      updateConnectionIndicator();
+    };
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.type === "tick") {
         serverRemaining = msg.remaining_ms;
         running = msg.running;
+        window.running = running;
         lastSync = performance.now();
       }
     };
-    ws.onclose = () => setTimeout(connect, 1000);
+    ws.onclose = () => {
+      wsStatus = "Reconnecting...";
+      wsConnected = false;
+      window.wsConnected = false;
+      window.updateDebugInfo && window.updateDebugInfo();
+      updateConnectionIndicator();
+      setTimeout(connect, 1000);
+    };
+    ws.onerror = () => {
+      wsStatus = "Error";
+      wsConnected = false;
+      window.wsConnected = false;
+      window.updateDebugInfo && window.updateDebugInfo();
+      updateConnectionIndicator();
+    };
   }
+  window.connect = connect;
+
+  function updateConnectionIndicator() {
+    const indicator = document.getElementById("connectionIndicator");
+    if (indicator) {
+      if (wsConnected) {
+        indicator.style.backgroundColor = "green";
+        indicator.title = "Connected";
+      } else {
+        indicator.style.backgroundColor = "red";
+        indicator.title = "Disconnected - Attempting to reconnect";
+      }
+    }
+  }
+
+  // Connection indicator
+  const connectionIndicator = document.createElement("div");
+  connectionIndicator.id = "connectionIndicator";
+  connectionIndicator.style.cssText =
+    "position:fixed;top:10px;right:10px;width:12px;height:12px;border-radius:50%;background-color:red;z-index:1000;cursor:pointer";
+  connectionIndicator.title = "Connection Status";
+  connectionIndicator.onclick = () => {
+    if (!wsConnected && ws) {
+      ws.close();
+      connect();
+    }
+  };
+  document.body.appendChild(connectionIndicator);
+
+  function manualDisconnect() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.close();
+    }
+  }
+  window.manualDisconnect = manualDisconnect;
+
   connect();
 </script>
+<script src="{% static 'shotclock/js/debug.js' %}"></script>

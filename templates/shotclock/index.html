@@ -66,6 +66,77 @@
         </div>
 
         <div class="game-section">
+          <h2>
+            Currently Active Clocks
+            <span id="connection-status" class="connection-status">●</span>
+          </h2>
+          <div id="active-clocks-container">
+            <table
+              id="active-clocks-table"
+              style="width: 100%; border-collapse: collapse; margin: 10px 0"
+            >
+              <tbody id="clocks-tbody">
+                <!-- Initial content from server -->
+                {% for clock in active_clocks %}
+                <tr>
+                  <td
+                    style="
+                      padding: 8px;
+                      border: 1px solid #ddd;
+                      font-family: monospace;
+                    "
+                  >
+                    {{ clock.game_id }}
+                  </td>
+                  <td
+                    style="
+                      padding: 8px;
+                      border: 1px solid #ddd;
+                      font-family: monospace;
+                      font-weight: bold;
+                    "
+                  >
+                    {{ clock.time_display }}
+                  </td>
+                  <td style="padding: 8px; border: 1px solid #ddd">
+                    <span
+                      class="{% if clock.running %}status-running{% else %}status-stopped{% endif %}"
+                      >{{ clock.status }}</span
+                    >
+                  </td>
+                  <td style="padding: 8px; border: 1px solid #ddd">
+                    <a
+                      href="{% url 'control' game_id=clock.game_id %}"
+                      style="margin-right: 10px"
+                      >Control</a
+                    >
+                    <a href="{% url 'display' game_id=clock.game_id %}"
+                      >Display</a
+                    >
+                  </td>
+                </tr>
+                {% empty %}
+                <tr id="no-clocks-row">
+                  <td
+                    colspan="4"
+                    style="
+                      padding: 20px;
+                      text-align: center;
+                      font-style: italic;
+                      border: 1px solid #ddd;
+                    "
+                  >
+                    No active clocks found. Create a new clock using the input
+                    above.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="game-section">
           <h2>API Endpoints</h2>
           <p>
             For developers - API endpoints for game state (replace "game1" with
@@ -85,12 +156,66 @@
                 >Server-Sent Events Stream</a
               >
             </li>
+            <li>
+              <a href="{% url 'all_clocks_json' %}">All Active Clocks (JSON)</a>
+            </li>
           </ul>
         </div>
       </div>
     </div>
 
+    <style>
+      .status-running {
+        color: green;
+        font-weight: bold;
+      }
+      .status-stopped {
+        color: red;
+      }
+      .connection-status {
+        font-size: 14px;
+        margin-left: 10px;
+        transition: color 0.3s;
+      }
+      .connection-status.connected {
+        color: green;
+      }
+      .connection-status.connecting {
+        color: orange;
+      }
+      .connection-status.disconnected {
+        color: red;
+      }
+      .time-warning {
+        color: red !important;
+        font-weight: bold !important;
+        animation: pulse-red 1s infinite;
+      }
+      .time-zero {
+        color: #ff0000 !important;
+        font-weight: bold !important;
+        background-color: #ffeeee;
+      }
+      @keyframes pulse-red {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        25%,
+        75% {
+          opacity: 0.7;
+        }
+      }
+    </style>
+
     <script>
+      let indexWs = null;
+      let activeClocks = {};
+      let wsStatus = "connecting";
+      let lastUpdateCount = 0;
+      let clientClocks = {}; // Client-side clock data for real-time interpolation
+      window.clientName = "Index Page";
+
       function updateLinks() {
         const gameId =
           document.getElementById("gameIdInput").value.trim() || "your-game-id";
@@ -108,13 +233,251 @@
         );
       }
 
+      function updateConnectionStatus() {
+        const statusEl = document.getElementById("connection-status");
+        statusEl.className = `connection-status ${wsStatus}`;
+
+        let statusText = "●";
+        switch (wsStatus) {
+          case "connected":
+            statusText = "● Connected";
+            break;
+          case "connecting":
+            statusText = "● Connecting...";
+            break;
+          case "disconnected":
+            statusText = "● Disconnected";
+            break;
+          case "error":
+            statusText = "● Error";
+            break;
+        }
+        statusEl.textContent = statusText;
+
+        // Make status clickable for manual reconnect when disconnected
+        if (wsStatus === "disconnected" || wsStatus === "error") {
+          statusEl.style.cursor = "pointer";
+          statusEl.title = "Click to reconnect";
+          statusEl.onclick = manualReconnect;
+        } else {
+          statusEl.style.cursor = "default";
+          statusEl.title = "";
+          statusEl.onclick = null;
+        }
+
+        // Update shared debug info
+        window.wsStatus = wsStatus;
+        window.activeClocksCount = lastUpdateCount;
+        window.runningClocksCount = Object.values(clientClocks).filter(
+          (c) => c.running
+        ).length;
+        window.updateDebugInfo && window.updateDebugInfo();
+      }
+
+      function formatTime(ms) {
+        const mins = Math.floor(ms / 60000);
+        const secs = Math.floor((ms % 60000) / 1000);
+        const tenths = Math.floor((ms % 1000) / 100);
+        return `${mins ? String(mins).padStart(2, "0") + ":" : ""}${String(
+          secs
+        ).padStart(2, "0")}.${tenths}`;
+      }
+
+      function updateRealtimeClocks() {
+        // Update all running clocks in real-time
+        Object.keys(clientClocks).forEach((gameId) => {
+          const clock = clientClocks[gameId];
+          if (clock.running && clock.serverRemaining > 0) {
+            const elapsed = performance.now() - clock.lastSync;
+            const currentMs = Math.max(0, clock.serverRemaining - elapsed);
+
+            // Update the display
+            const row = document.querySelector(`tr[data-game-id="${gameId}"]`);
+            if (row) {
+              const timeCell = row.children[1]; // Second column is time
+              const statusCell = row.children[2]; // Third column is status
+
+              timeCell.textContent = formatTime(currentMs);
+
+              // Update status if clock reached zero
+              if (currentMs === 0 && clock.running) {
+                clock.running = false;
+                statusCell.innerHTML =
+                  '<span class="status-stopped">Stopped</span>';
+                timeCell.className = "time-zero";
+              } else {
+                // Apply warning styles for low time
+                if (currentMs <= 5000 && currentMs > 0) {
+                  timeCell.className = "time-warning";
+                } else {
+                  timeCell.className = "";
+                  timeCell.style.color = "";
+                  timeCell.style.fontWeight = "bold";
+                }
+              }
+            }
+          } else if (clientClocks[gameId] && !clock.running) {
+            // Handle stopped clocks - make sure they show the correct final time
+            const row = document.querySelector(`tr[data-game-id="${gameId}"]`);
+            if (row) {
+              const timeCell = row.children[1];
+              if (clock.serverRemaining === 0) {
+                timeCell.className = "time-zero";
+                timeCell.textContent = formatTime(0);
+              }
+            }
+          }
+        });
+
+        requestAnimationFrame(updateRealtimeClocks);
+      }
+
+      function updateClocksTable(clocks) {
+        const tbody = document.getElementById("clocks-tbody");
+
+        if (!clocks || clocks.length === 0) {
+          tbody.innerHTML = `
+            <tr id="no-clocks-row">
+              <td colspan="4" style="padding: 20px; text-align: center; font-style: italic; border: 1px solid #ddd;">
+                No active clocks found. Create a new clock using the input above.
+              </td>
+            </tr>
+          `;
+          activeClocks = {};
+          clientClocks = {};
+          return;
+        }
+
+        // Update client-side clock tracking
+        const newClientClocks = {};
+        clocks.forEach((clock) => {
+          newClientClocks[clock.game_id] = {
+            serverRemaining: clock.remaining_ms,
+            running: clock.running,
+            lastSync: performance.now(),
+          };
+        });
+        clientClocks = newClientClocks;
+
+        // Build new table content
+        let newRows = "";
+        const newActiveClocks = {};
+
+        clocks.forEach((clock) => {
+          newActiveClocks[clock.game_id] = clock;
+          const isUpdated =
+            !activeClocks[clock.game_id] ||
+            activeClocks[clock.game_id].time_display !== clock.time_display ||
+            activeClocks[clock.game_id].running !== clock.running;
+
+          const rowClass = isUpdated ? "clock-row-updated" : "";
+          const statusClass = clock.running
+            ? "status-running"
+            : "status-stopped";
+
+          // Use server time initially, real-time updates will take over
+          const timeColor = clock.remaining_ms <= 5000 ? "color: red;" : "";
+
+          newRows += `
+            <tr class="${rowClass}" data-game-id="${clock.game_id}">
+              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace;">${clock.game_id}</td>
+              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace; font-weight: bold; ${timeColor}">${clock.time_display}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">
+                <span class="${statusClass}">${clock.status}</span>
+              </td>
+              <td style="padding: 8px; border: 1px solid #ddd;">
+                <a href="/control/${clock.game_id}/" style="margin-right: 10px;">Control</a>
+                <a href="/display/${clock.game_id}/">Display</a>
+              </td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = newRows;
+        activeClocks = newActiveClocks;
+
+        // Update debug info with new counts
+        window.activeClocksCount = clocks.length;
+        window.runningClocksCount = clocks.filter((c) => c.running).length;
+        window.updateDebugInfo && window.updateDebugInfo();
+
+        // Remove highlight animation after a brief moment
+        setTimeout(() => {
+          document.querySelectorAll(".clock-row-updated").forEach((row) => {
+            row.classList.remove("clock-row-updated");
+          });
+        }, 1000);
+      }
+
+      function connectIndexWebSocket() {
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${location.host}/ws/index/`;
+
+        indexWs = new WebSocket(wsUrl);
+
+        indexWs.onopen = function (e) {
+          wsStatus = "connected";
+          window.ws = indexWs;
+          updateConnectionStatus();
+        };
+
+        indexWs.onmessage = function (e) {
+          const data = JSON.parse(e.data);
+          if (data.type === "clocks_update") {
+            updateClocksTable(data.active_clocks);
+            lastUpdateCount = data.count;
+          }
+        };
+
+        indexWs.onclose = function (e) {
+          wsStatus = "disconnected";
+          updateConnectionStatus();
+          // Reconnect after 2 seconds
+          setTimeout(connectIndexWebSocket, 2000);
+        };
+
+        indexWs.onerror = function (e) {
+          wsStatus = "error";
+          updateConnectionStatus();
+        };
+      }
+
+      function manualReconnect() {
+        if (indexWs) {
+          indexWs.close();
+        }
+        wsStatus = "connecting";
+        updateConnectionStatus();
+        connectIndexWebSocket();
+      }
+
+      function manualDisconnect() {
+        if (indexWs && indexWs.readyState === WebSocket.OPEN) {
+          indexWs.close();
+        }
+      }
+      window.connect = manualReconnect;
+      window.manualDisconnect = manualDisconnect;
+
+      function updateDebugInfo() {
+      }
+
       // Update links when the input changes
       document
         .getElementById("gameIdInput")
         .addEventListener("input", updateLinks);
 
-      // Initialize links on page load
-      updateLinks();
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        updateLinks();
+        wsStatus = "connecting";
+        updateConnectionStatus();
+        connectIndexWebSocket();
+
+        // Start real-time clock updates
+        updateRealtimeClocks();
+      });
     </script>
+    <script src="{% static 'shotclock/js/debug.js' %}"></script>
   </body>
 </html>

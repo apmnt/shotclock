@@ -9,4 +9,5 @@ urlpatterns = [
     path("api/clock/<slug:game_id>/state", views.state_json, name="state_json"),
     path("api/clock/<slug:game_id>/state.txt", views.state_plain, name="state_plain"),
     path("api/clock/<slug:game_id>/stream", views.stream_sse, name="state_sse"),
+    path("api/clocks/all", views.all_clocks_json, name="all_clocks_json"),
 ]
