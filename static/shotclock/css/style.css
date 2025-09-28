@@ -113,7 +113,7 @@ th {
 }
 
 .main-content,
-.header {
+.sidebar {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -121,6 +121,15 @@ th {
   margin-bottom: 0px;
   box-sizing: border-box;
   min-height: calc(100vh - 40px);
+}
+
+.header {
+  position: fixed;
+  bottom: 0;
+  left: 20px;
+  right: 0;
+  border-bottom: 1px solid #eee;
+  z-index: 1000;
 }
 
 .title h2 {
