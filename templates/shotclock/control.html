@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="{% static 'shotclock/css/style.css' %}" />
 </head>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<body>
+<body style="overflow: hidden">
   <div class="control-container">
     <div class="control-header">
       <h1 class="slogan">{{ game_id }}</h1>
@@ -31,6 +31,19 @@
         <button id="reset">Reset</button>
       </div>
     </div>
+  </div>
+  <div
+    style="
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: small;
+      color: grey;
+    "
+  >
+    Press space to toggle start/stop
   </div>
   <script>
     const proto = location.protocol === "https:" ? "wss" : "ws";
@@ -152,6 +165,18 @@
     };
     document.querySelectorAll("button[data-s]").forEach((b) => {
       b.onclick = () => sendCommand("set", +b.dataset.s * 1000);
+    });
+
+    // Keyboard shortcut for space bar to toggle start/stop
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (running) {
+          sendCommand("stop");
+        } else {
+          sendCommand("start");
+        }
+      }
     });
 
     // Initialize connection
