@@ -383,6 +383,22 @@ input[type="number"]:focus {
   color: #dc3545;
 }
 
+.spacebar-hint {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: small;
+  color: grey;
+}
+
+@media screen and (max-width: 600px) {
+  .spacebar-hint {
+    display: none;
+  }
+}
+
 @media (max-width: 850px) {
   .grid-container {
     display: block;
@@ -522,7 +538,7 @@ input[type="number"]:focus {
   @media (max-width: 480px) {
     .row:nth-of-type(3),
     .row:nth-of-type(4) {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
