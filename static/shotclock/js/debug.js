@@ -7,8 +7,17 @@
 
   const debugInfo = document.createElement("div");
   debugInfo.style.cssText =
-    "position:fixed;bottom:10px;left:10px;font-size:12px;background:rgba(0,0,0,0.7);color:white;padding:5px;border-radius:3px;font-family:monospace;z-index:1000";
+    "position:fixed;bottom:10px;left:10px;font-size:12px;background:rgba(0,0,0,0.7);color:white;padding:5px;border-radius:3px;font-family:monospace;z-index:1000;display:none";
   document.body.appendChild(debugInfo);
+
+  // Toggle debug visibility with Ctrl+D
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+      e.preventDefault(); // Prevent browser dev tools from opening
+      debugInfo.style.display =
+        debugInfo.style.display === "none" ? "block" : "none";
+    }
+  });
 
   window.updateDebugInfo = function () {
     // Update counts if they're dynamic
