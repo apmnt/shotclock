@@ -76,16 +76,29 @@ ASGI_APPLICATION = "config.asgi.application"
 
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
+DEBUG = False
+
 # Static files
 STATIC_URL = "/static/"
-STATIC_ROOT = "/var/www/shotclock/static"
+
+# Use different static root for development vs production
+if DEBUG:
+    # For local development, don't set STATIC_ROOT (use runserver's built-in serving)
+    STATIC_ROOT = None
+else:
+    # For production
+    STATIC_ROOT = "/var/www/shotclock/static"
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
 # Media files
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/var/www/shotclock/media"
+if DEBUG:
+    MEDIA_ROOT = BASE_DIR / "media"
+else:
+    MEDIA_ROOT = Path("/var/www/shotclock/media")
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
