@@ -18,7 +18,8 @@ if not SECRET_KEY:
 if not SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY is not set (env or .env).")
 
-ALLOWED_HOSTS = ["161.33.14.26", "127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["shotclock.aapomontin.com", "161.33.14.26", "127.0.0.1", "localhost"]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
