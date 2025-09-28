@@ -1,36 +1,92 @@
 <!DOCTYPE html>
+<head>
+  <title>{{ game_id }} - shot clock control</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'shotclock/css/style.css' %}" />
+</head>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<h1>Shot Clock Control – {{ game_id }}</h1>
-<div class="row">
-  <label
-    >Set (s): <input id="secs" type="number" value="24" min="1" max="99"
-  /></label>
-</div>
-<div class="row">
-  <button id="start">Start</button>
-  <button id="stop">Stop</button>
-  <button id="reset">Reset</button>
-  <button id="apply">Apply</button>
-  <button data-s="14">Set 14</button>
-  <button data-s="24">Set 24</button>
-</div>
-<script>
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(
-    `${proto}://${location.host}/ws/clock/{{ game_id }}/`
-  );
-  document.getElementById("start").onclick = () =>
-    ws.send(JSON.stringify({ cmd: "start" }));
-  document.getElementById("stop").onclick = () =>
-    ws.send(JSON.stringify({ cmd: "stop" }));
-  document.getElementById("reset").onclick = () =>
-    ws.send(JSON.stringify({ cmd: "reset" }));
-  document.getElementById("apply").onclick = () => {
-    const ms = Math.max(1, +document.getElementById("secs").value) * 1000;
-    ws.send(JSON.stringify({ cmd: "set", value: ms }));
-  };
-  document.querySelectorAll("button[data-s]").forEach((b) => {
-    b.onclick = () =>
-      ws.send(JSON.stringify({ cmd: "set", value: +b.dataset.s * 1000 }));
-  });
-</script>
+<body>
+  <div class="control-container">
+    <div class="control-header">
+      <h1 class="slogan">{{ game_id }}</h1>
+      <h1>shot clock control</h1>
+    </div>
+    <div class="control-content">
+      <div class="clock-display">
+        <div id="clockTime">24.0</div>
+      </div>
+      <div class="row">
+        <label
+          >Set (s): <input id="secs" type="number" value="24" min="1" max="99"
+        /></label>
+      </div>
+      <div class="row">
+        <button id="apply">Apply</button>
+        <button data-s="14">Set 14</button>
+        <button data-s="24">Set 24</button>
+      </div>
+      <div class="row">
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+        <button id="reset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    const clockTimeEl = document.getElementById("clockTime");
+    let running = false,
+      serverRemaining = 24000,
+      lastSync = performance.now();
+
+    function fmt(ms) {
+      const m = Math.floor(ms / 60000),
+        s = Math.floor((ms % 60000) / 1000),
+        d = Math.floor((ms % 1000) / 100);
+      return `${m ? String(m).padStart(2, "0") + ":" : ""}${String(s).padStart(
+        2,
+        "0"
+      )}.${d}`;
+    }
+
+    function updateClock() {
+      let ms = serverRemaining;
+      if (running) {
+        const elapsed = performance.now() - lastSync;
+        ms = Math.max(0, serverRemaining - elapsed);
+      }
+      clockTimeEl.textContent = fmt(ms);
+      clockTimeEl.className = ms <= 5000 ? "warn" : "";
+      requestAnimationFrame(updateClock);
+    }
+    updateClock();
+
+    const ws = new WebSocket(
+      `${proto}://${location.host}/ws/clock/{{ game_id }}/`
+    );
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "tick") {
+        serverRemaining = msg.remaining_ms;
+        running = msg.running;
+        lastSync = performance.now();
+      }
+    };
+
+    document.getElementById("start").onclick = () =>
+      ws.send(JSON.stringify({ cmd: "start" }));
+    document.getElementById("stop").onclick = () =>
+      ws.send(JSON.stringify({ cmd: "stop" }));
+    document.getElementById("reset").onclick = () =>
+      ws.send(JSON.stringify({ cmd: "reset" }));
+    document.getElementById("apply").onclick = () => {
+      const ms = Math.max(1, +document.getElementById("secs").value) * 1000;
+      ws.send(JSON.stringify({ cmd: "set", value: ms }));
+    };
+    document.querySelectorAll("button[data-s]").forEach((b) => {
+      b.onclick = () =>
+        ws.send(JSON.stringify({ cmd: "set", value: +b.dataset.s * 1000 }));
+    });
+  </script>
+</body>

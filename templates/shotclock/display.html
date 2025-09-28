@@ -1,6 +1,11 @@
 <!DOCTYPE html>
+<head>
+  <title>{{ game_id }} - shot clock display</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'shotclock/css/style.css' %}" />
+</head>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<div id="t">24.0</div>
+<div id="time">24.0</div>
 <script>
   const game_id = "{{ game_id }}";
   const tEl = document.getElementById("t");
