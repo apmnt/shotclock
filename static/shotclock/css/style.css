@@ -46,6 +46,30 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "GeistMono";
+  src: url("../fonts/GeistMono/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GeistMono";
+  src: url("../fonts/GeistMono/GeistMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GeistMono";
+  src: url("../fonts/GeistMono/GeistMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
@@ -66,6 +90,8 @@ h2 {
   font-size: 50vw;
   text-align: center;
   margin: 0;
+  font-family: "GeistMono", monospace;
+  letter-spacing: -0.05em;
 }
 
 .slogan {
@@ -320,13 +346,17 @@ input[type="number"]:focus {
 
 #clockTime {
   font-size: 15rem;
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
   margin: 0;
-  font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  letter-spacing: -0.05em;
+  font-family: "GeistMono", monospace;
 }
 
 #clockTime.warn {
+  color: #dc3545;
+}
+
+#time.warn {
   color: #dc3545;
 }
