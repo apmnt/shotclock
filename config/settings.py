@@ -75,7 +75,7 @@ ASGI_APPLICATION = "config.asgi.application"
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 # Static files
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = "/var/www/shotclock/static"
 
 # Media files
