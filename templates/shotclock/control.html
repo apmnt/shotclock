@@ -58,9 +58,7 @@
       }
       clockTimeEl.textContent = fmt(ms);
       clockTimeEl.className = ms <= 5000 ? "warn" : "";
-      requestAnimationFrame(updateClock);
     }
-    updateClock();
 
     let ws = null;
     let wsConnected = false;
@@ -85,6 +83,7 @@
           running = msg.running;
           window.running = running;
           lastSync = performance.now();
+          updateClock(); // Update display only on tick
         }
       };
 
@@ -145,7 +144,10 @@
     }
 
     document.getElementById("start").onclick = () => sendCommand("start");
-    document.getElementById("stop").onclick = () => sendCommand("stop");
+    document.getElementById("stop").onclick = () => {
+      running = false;
+      sendCommand("stop");
+    };
     document.getElementById("reset").onclick = () => sendCommand("reset");
     document.getElementById("apply").onclick = () => {
       const ms = Math.max(1, +document.getElementById("secs").value) * 1000;
@@ -160,8 +162,10 @@
       if (event.code === "Space") {
         event.preventDefault();
         if (running) {
+          running = false;
           sendCommand("stop");
         } else {
+          running = true;
           sendCommand("start");
         }
       }

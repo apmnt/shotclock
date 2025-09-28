@@ -38,14 +38,6 @@
           Separation of controls and the view allows you to manage game state
           from one client, while showing the countdown on other clients.
         </p>
-        <p>
-          While the viewing and controlling the clocks from multiple clients
-          does work well, some latency is expected due to the nature of
-          WebSockets and network conditions, especially as the app is hosted in
-          the Asia Pacific region. To eliminate this latency, consider running
-          it on a development server.
-        </p>
-
         <div class="game-section">
           <h2>Create a clock</h2>
           <p>
@@ -81,7 +73,7 @@
               <tbody id="clocks-tbody">
                 <!-- Initial content from server -->
                 {% for clock in active_clocks %}
-                <tr>
+                <tr data-game-id="{{ clock.game_id }}">
                   <td
                     style="
                       padding: 8px;
@@ -347,18 +339,24 @@
 
       function updateClocksTable(clocks) {
         const tbody = document.getElementById("clocks-tbody");
+        const noClocksRow = document.getElementById("no-clocks-row");
 
         if (!clocks || clocks.length === 0) {
-          tbody.innerHTML = `
-            <tr id="no-clocks-row">
-              <td colspan="4" style="padding: 20px; text-align: center; font-style: italic; border: 1px solid #ddd;">
-                No active clocks found. Create a new clock using the input above.
-              </td>
-            </tr>
-          `;
+          // Show no clocks row and hide others
+          if (noClocksRow) {
+            noClocksRow.style.display = "";
+          }
+          // Remove all clock rows
+          const clockRows = tbody.querySelectorAll("tr[data-game-id]");
+          clockRows.forEach((row) => row.remove());
           activeClocks = {};
           clientClocks = {};
           return;
+        }
+
+        // Hide no clocks row
+        if (noClocksRow) {
+          noClocksRow.style.display = "none";
         }
 
         // Update client-side clock tracking
@@ -372,54 +370,72 @@
         });
         clientClocks = newClientClocks;
 
-        // Build new table content
-        let newRows = "";
-        const newActiveClocks = {};
+        // Track current game IDs
+        const currentGameIds = new Set(clocks.map((c) => c.game_id));
+        const existingRows = tbody.querySelectorAll("tr[data-game-id]");
+        const existingGameIds = new Set(
+          Array.from(existingRows).map((row) => row.dataset.gameId)
+        );
 
+        // Update or add rows
         clocks.forEach((clock) => {
-          newActiveClocks[clock.game_id] = clock;
-          const isUpdated =
-            !activeClocks[clock.game_id] ||
-            activeClocks[clock.game_id].time_display !== clock.time_display ||
-            activeClocks[clock.game_id].running !== clock.running;
-
-          const rowClass = isUpdated ? "clock-row-updated" : "";
-          const statusClass = clock.running
-            ? "status-running"
-            : "status-stopped";
-
-          // Use server time initially, real-time updates will take over
-          const timeColor = clock.remaining_ms <= 5000 ? "color: red;" : "";
-
-          newRows += `
-            <tr class="${rowClass}" data-game-id="${clock.game_id}">
-              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace;">${clock.game_id}</td>
-              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace; font-weight: bold; ${timeColor}">${clock.time_display}</td>
+          let row = document.querySelector(
+            `tr[data-game-id="${clock.game_id}"]`
+          );
+          if (row) {
+            // Update existing row
+            const timeCell = row.children[1];
+            const statusCell = row.children[2];
+            timeCell.textContent = clock.time_display;
+            statusCell.innerHTML = `<span class="${
+              clock.running ? "status-running" : "status-stopped"
+            }">${clock.status}</span>`;
+            // Apply initial time color
+            timeCell.style.color = clock.remaining_ms <= 5000 ? "red" : "";
+          } else {
+            // Add new row
+            row = document.createElement("tr");
+            row.setAttribute("data-game-id", clock.game_id);
+            row.innerHTML = `
+              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace;">${
+                clock.game_id
+              }</td>
+              <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace; font-weight: bold; ${
+                clock.remaining_ms <= 5000 ? "color: red;" : ""
+              }">${clock.time_display}</td>
               <td style="padding: 8px; border: 1px solid #ddd;">
-                <span class="${statusClass}">${clock.status}</span>
+                <span class="${
+                  clock.running ? "status-running" : "status-stopped"
+                }">${clock.status}</span>
               </td>
               <td style="padding: 8px; border: 1px solid #ddd;">
-                <a href="/control/${clock.game_id}/" style="margin-right: 10px;">Control</a>
+                <a href="/control/${
+                  clock.game_id
+                }/" style="margin-right: 10px;">Control</a>
                 <a href="/display/${clock.game_id}/">Display</a>
               </td>
-            </tr>
-          `;
+            `;
+            tbody.appendChild(row);
+          }
         });
 
-        tbody.innerHTML = newRows;
-        activeClocks = newActiveClocks;
+        // Remove rows for clocks no longer active
+        existingRows.forEach((row) => {
+          const gameId = row.dataset.gameId;
+          if (!currentGameIds.has(gameId)) {
+            row.remove();
+          }
+        });
+
+        activeClocks = {};
+        clocks.forEach((clock) => {
+          activeClocks[clock.game_id] = clock;
+        });
 
         // Update debug info with new counts
         window.activeClocksCount = clocks.length;
         window.runningClocksCount = clocks.filter((c) => c.running).length;
         window.updateDebugInfo && window.updateDebugInfo();
-
-        // Remove highlight animation after a brief moment
-        setTimeout(() => {
-          document.querySelectorAll(".clock-row-updated").forEach((row) => {
-            row.classList.remove("clock-row-updated");
-          });
-        }, 1000);
       }
 
       function connectIndexWebSocket() {
